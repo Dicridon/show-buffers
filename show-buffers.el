@@ -69,7 +69,8 @@ BUF is the show buffer."
       (show-buffers-insert-user-buffer-list)
       (show-buffers-display-in-side-window buf)
       (show-buffers-mode)
-      (goto-char (point-min)))))
+      (goto-char (point-min))
+      (set-window-point (get-buffer-window buf) (point-min)))))
 
 (defun show-buffers-refresh()
   "Called when a show-buffers buffer already exsits."
