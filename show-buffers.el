@@ -1,9 +1,38 @@
-;;; show-buffers -- Summary
+ ;;; show-buffers -- Summary
 ;;; Commentary:
 ;;; Code:
 (require 'cl-lib)
 
 (defvar show-buffers-buffer-name "*ShowBuffers*")
+
+(defcustom show-buffers-window-position 'right
+  "Which side should show-buffers be displayed.
+'right, 'left are available.
+Code below is from Treemacs 'treemacs-position'"
+  :type '(choice (const left)
+                 (const right))
+  :group 'show-buffers)
+
+(defcustom show-buffers-window-width 35
+  "Width of the show-buffers window."
+  :type 'integer
+  :group 'show-buffers)
+
+(defcustom show-buffers-no-delete-other-windows t
+  "Do not delete show-buffers window when 'delete-other-windows' are called.
+More details please refer to treemacs source code."
+  :type 'boolean
+  :group 'show-buffers)
+
+(defcustom show-buffers-refresh-interval 1.0
+  "Frequency of refreshing the show-buffer window."
+  :type 'float
+  :group 'show-buffers)
+
+(defcustom show-buffers-follow-interval 0.8
+  "Frequency of following focused buffer in show-buffers window."
+  :type 'float
+  :group 'show-buffers)
 
 ;;; helper functions
 (defun show-buffers-get-current-buffer-name ()
@@ -53,9 +82,10 @@
   "Display show buffers buffer in a side window.
 BUF is the show buffer."
   (display-buffer buf
-                  (display-buffer-in-side-window buf '((side . right)
-                                                       (window-width . 35)
-                                                       (dedicated . t)))))
+                  (display-buffer-in-side-window buf `((side . ,show-buffers-window-position)
+                                                       (window-width . ,show-buffers-window-width)
+                                                       (dedicated . t))))
+  (set-window-parameter (get-buffer-window) 'no-delete-other-windows show-buffers-no-delete-other-windows))
 
 (defun show-buffers-valid-buffer-to-show-buffers ()
   "Check if current buffer is the show-buffers buffer."
@@ -72,7 +102,23 @@ BUF is the show buffer."
       (goto-char (point-min))
       (set-window-point (get-buffer-window buf) (point-min)))))
 
-(defun show-buffers-refresh()
+(defun show-buffers-follow ()
+  "Move cursor in show-buffers to the buffer being focused."
+  (interactive)
+  (let ((buf (buffer-name (current-buffer))))
+    ;; only take effects when show-buffers is displayed and is not focused
+    (when (and (show-buffers-buffer-displayed)
+               (not (eq (current-buffer)
+                        (get-buffer show-buffers-buffer-name))))
+      (with-current-buffer (get-buffer show-buffers-buffer-name)
+        (let ((pnt (point)))
+          (goto-char (point-min))
+          (if (search-forward buf)
+              (move-beginning-of-line nil)
+            (goto-char pnt)))))))
+
+
+(defun show-buffers-refresh ()
   "Called when a show-buffers buffer already exsits."
   (when (show-buffers-buffer-displayed)
     (let ((buf (show-buffers-get-show-buffer)))
@@ -114,12 +160,17 @@ To close show-buffers buffer, switch to it and press q"
 (defvar show-buffers-refresh-timer nil
   "Periodically refresh show-buffers buffer.")
 
+
+(defvar show-buffers-follow-timer nil
+  "Move cursor in show-buffers to the buffer being focused.")
+
 (defun show-buffers-close ()
   "Close the show-buffers buffer, cancel the show-buffers-refresh timer."
   (interactive)
   (if (show-buffers-buffer-exsits)
       (kill-buffer (show-buffers-get-show-buffer)))
-  (cancel-timer show-buffers-refresh-timer))
+  (cancel-timer show-buffers-refresh-timer)
+  (cancel-timer show-buffers-follow-timer))
 
 ;;; keep content in show buffer up-to-date
 (defun show-buffers-refresh-find-file-hook ()
@@ -214,10 +265,10 @@ MODE-ACTIVATION is only called with ARGS when show-buffers buffer is current buf
   (add-hook 'find-file-hook 'show-buffers-refresh-find-file-hook)
   (add-hook 'kill-buffer-hook 'show-buffers-refresh-kill-buffer-hook)
   (hl-line-mode)
-  (setq show-buffers-refresh-timer (run-with-timer 2 1 'show-buffers-refresh))
+  (setq show-buffers-refresh-timer (run-with-timer 2 show-buffers-refresh-interval 'show-buffers-refresh))
+  (setq show-buffers-follow-timer (run-with-timer 2 show-buffers-follow-interval 'show-buffers-follow))
   (setq window-size-fixed 'width))
 
 (advice-add #'show-buffers-mode :around #'show-buffers--mode-check-advice)
-
 (provide 'show-buffers)
 ;;; show-buffers ends here
