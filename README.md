@@ -10,6 +10,12 @@ Unlike `buffer-menu-mode` in which the buffer list is static, the content in `sh
 # Use
 Put the show-buffers.el in your emacs' load path and add `(require 'show-buffers)` to your `init.el` file.
 
+# Customization
+Following variables can be customized:
+- `show-buffers-window-width`: default to 35
+- `show-buffers-window-position`: `'right` and `'left` are available. Default to `'right`
+- `show-buffers-refresh-interval`: how frequently (in seconds) should `show-buffers` window be refreshed. Default to 1.0 second.
+- `show-buffers-follow-interval`: how frequently (in seconds) should `show-buffers` window points to the buffer currently focused. Default to 0.8 seconds.
 
 # Keybindings
 Several commands are available for buffer killing, saving and switching. However, these commands

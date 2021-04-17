@@ -109,11 +109,13 @@ BUF is the show buffer."
     ;; only take effects when show-buffers is displayed and is not focused
     (when (and (show-buffers-buffer-displayed)
                (not (eq (current-buffer)
-                        (get-buffer show-buffers-buffer-name))))
+                        (get-buffer show-buffers-buffer-name)))
+               (not (string-prefix-p " " buf))
+               (not (string-prefix-p "*" buf)))
       (with-current-buffer (get-buffer show-buffers-buffer-name)
         (let ((pnt (point)))
           (goto-char (point-min))
-          (if (search-forward buf)
+          (if (search-forward buf nil t)
               (move-beginning-of-line nil)
             (goto-char pnt)))))))
 
