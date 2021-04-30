@@ -26,4 +26,5 @@ are NOT intended to be used outside the `show-buffers` side window. Instead, ple
 - `s`: save the buffer under the cursor
 - `S`: save all modified buffers
 - `RET`: display and switch to the buffer under the cursor
+- `o`: display and switch to the buffer under the cursor, then close all other windows
 - `q`: close the `show-buffers` side window
